@@ -1,7 +1,8 @@
 #pragma once
 
+namespace safe_udp {
 class PacketStatistics {
-public:
+ public:
   PacketStatistics();
   virtual ~PacketStatistics();
 
@@ -11,3 +12,4 @@ public:
   int cong_avd_packet_rx_count_;
   int retransmit_count_;
 };
+}  // namespace safe_udp

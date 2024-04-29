@@ -1,10 +1,11 @@
-#include <unistd.h>
 #include <cstdlib>
 #include <iostream>
 #include <string>
 #include <glog/logging.h>
 
 #include "udp_server.h"
+
+constexpr char SERVER_FILE_PATH[] = "/work/files/server_files/";
 
 int main(int argc, char *argv[]) {
   google::InitGoogleLogging(argv[0]);
@@ -26,7 +27,7 @@ int main(int argc, char *argv[]) {
     recv_window = atoi(argv[2]);
   }
 
-  UdpServer *udp_server = new UdpServer();
+  safe_udp::UdpServer *udp_server = new safe_udp::UdpServer();
   udp_server->rwnd_ = recv_window;
   sfd = udp_server->StartServer(port_num);
   message_recv = udp_server->GetRequest(sfd);
@@ -39,7 +40,7 @@ int main(int argc, char *argv[]) {
   // }
 
   std::string file_name =
-      "/work/files/server_files/" + std::string(message_recv);
+      std::string(SERVER_FILE_PATH) + std::string(message_recv);
   if (udp_server->OpenFile(file_name)) {
     udp_server->StartFileTransfer();
   } else {
@@ -47,5 +48,5 @@ int main(int argc, char *argv[]) {
   }
 
   free(udp_server);
-  return 1;
+  return 0;
 }

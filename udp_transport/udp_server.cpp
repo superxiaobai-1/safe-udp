@@ -1,26 +1,21 @@
 #include "udp_server.h"
+
 #include <arpa/inet.h>
-#include <netinet/in.h>
 #include <stdlib.h>
-#include <string.h>
-#include <strings.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <time.h>
-#include <unistd.h>
 #include <algorithm>
-#include <bitset>
 #include <cmath>
-#include <fstream>
-#include <iostream>
 #include <sstream>
 #include <vector>
 #include <glog/logging.h>
 
+namespace safe_udp {
 UdpServer::UdpServer() {
-  sliding_window_ = new SlidingWindow();
-  packet_statistics_ = new PacketStatistics();
+  sliding_window_ = std::make_unique<SlidingWindow>();
+  packet_statistics_ = std::make_unique<PacketStatistics>();
 
   sockfd_ = 0;
   smoothed_rtt_ = 20000;
@@ -58,10 +53,10 @@ int UdpServer::StartServer(int port) {
     LOG(ERROR) << "binding error !!!";
     exit(0);
   }
-  LOG(INFO) << "**Server Binding set to :" << server_addr.sin_addr.s_addr;
-  LOG(INFO) << "**Server Binding set to port:" << server_addr.sin_port;
-  LOG(INFO) << "**Server Binding set to family:" << server_addr.sin_family;
-  LOG(INFO) << "Reliable UDP FileServer started successfully";
+  LOG(INFO) << "**Server Bind set to addr: " << server_addr.sin_addr.s_addr;
+  LOG(INFO) << "**Server Bind set to port: " << server_addr.sin_port;
+  LOG(INFO) << "**Server Bind set to family: " << server_addr.sin_family;
+  LOG(INFO) << "Started successfully";
   sockfd_ = sfd;
   return sfd;
 }
@@ -251,7 +246,7 @@ void UdpServer::send() {
                 total_packet_sent) *
                    100
             << "%";
-  LOG(INFO) << "Statistics:: Retransmissions: "
+  LOG(INFO) << "Statistics: Retransmissions: "
             << packet_statistics_->retransmit_count_;
   LOG(INFO) << "========================================";
 }
@@ -301,7 +296,7 @@ void UdpServer::send_packet(int seq_number, int start_byte) {
 
 void UdpServer::wait_for_ack() {
   unsigned char buffer[MAX_PACKET_SIZE];
-  bzero(buffer, MAX_PACKET_SIZE);
+  memset(buffer, 0, MAX_PACKET_SIZE);
   socklen_t addr_size;
   struct sockaddr_in client_address;
   addr_size = sizeof(client_address);
@@ -447,7 +442,7 @@ char *UdpServer::GetRequest(int client_sockfd) {
       reinterpret_cast<char *>(calloc(MAX_PACKET_SIZE, sizeof(char)));
   struct sockaddr_in client_address;
   socklen_t addr_size;
-  bzero(buffer, MAX_PACKET_SIZE);
+  memset(buffer, 0, MAX_PACKET_SIZE);
   addr_size = sizeof(client_address);
   while (recvfrom(client_sockfd, buffer, MAX_PACKET_SIZE, 0,
                   (struct sockaddr *)&client_address, &addr_size) <= 0)
@@ -463,3 +458,4 @@ void UdpServer::send_data_segment(DataSegment *data_segment) {
          (struct sockaddr *)&cli_address_, sizeof(cli_address_));
   free(datagramChars);
 }
+}  // namespace safe_udp

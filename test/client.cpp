@@ -3,15 +3,10 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <unistd.h>
-#include <bitset>
-#include <fstream>
 #include <iostream>
-#include <sstream>
-#include "data_segment.h"
+
 #include "udp_client.h"
 
 #include <glog/logging.h>
@@ -26,14 +21,15 @@ int main(int argc, char *argv[]) {
                   "<file-name> <receiver-window> <control-param> <drop/delay%>";
     exit(1);
   }
-  UdpClient *udp_client = new UdpClient();
+
+  safe_udp::UdpClient *udp_client = new safe_udp::UdpClient();
   std::string server_ip(argv[1]);
   std::string port_num(argv[2]);
   std::string file_name(argv[3]);
-  int recv_window = atoi(argv[4]);
-  udp_client->receiver_window_ = recv_window;
+  udp_client->receiver_window_ = atoi(argv[4]);
+
   int control_param = atoi(argv[5]);
-  std::cout << "control_param: " << control_param << std::endl;
+  LOG(INFO) << "control_param: " << control_param;
   if (control_param == 0) {
     udp_client->is_delay_ = false;
     udp_client->is_packet_drop_ = false;
@@ -47,12 +43,16 @@ int main(int argc, char *argv[]) {
     udp_client->is_packet_drop_ = true;
     udp_client->is_delay_ = true;
   } else {
-    LOG(ERROR) << "Invalid argument,should be 0-3 !!!";
+    LOG(ERROR) << "Invalid argument, should be range in 0-3 !!!";
     return 0;
   }
+
   int drop_percentage = atoi(argv[6]);
   udp_client->prob_value_ = drop_percentage;
 
   udp_client->CreateSocketAndServerConnection(server_ip, port_num);
   udp_client->SendFileRequest(file_name);
+
+  free(udp_client);
+  return 0;
 }

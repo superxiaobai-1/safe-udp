@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 
+namespace safe_udp {
 DataSegment::DataSegment() {
   ack_number_ = -1;
   seq_number_ = -1;
@@ -69,3 +70,4 @@ bool DataSegment::convert_to_bool(unsigned char *buffer, int index) {
   bool booleanValue = buffer[index];
   return booleanValue;
 }
+}  // namespace safe_udp

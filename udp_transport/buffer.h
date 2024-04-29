@@ -3,6 +3,7 @@
 #include <sys/time.h>
 #include <time.h>
 
+namespace safe_udp {
 class SlidWinBuffer {
  public:
   SlidWinBuffer() {}
@@ -13,3 +14,4 @@ class SlidWinBuffer {
   int seq_num_;
   struct timeval time_sent_;
 };
+}  // namespace safe_udp

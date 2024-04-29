@@ -3,18 +3,30 @@
 #include <netinet/in.h>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <string>
 
 #include "data_segment.h"
 #include "packet_statistics.h"
 #include "sliding_window.h"
 
+namespace safe_udp {
 class UdpServer {
  public:
   UdpServer();
 
+  ~UdpServer() {
+    // if (sliding_window_) {
+    //   free(sliding_window_);
+    // }
+
+    // if (packet_statistics_) {
+    //   free(packet_statistics_);
+    // }
+  }
+
   char *GetRequest(int client_sockfd);
-  bool OpenFile(const std::string& file_name);
+  bool OpenFile(const std::string &file_name);
   void StartFileTransfer();
   void SendError();
 
@@ -28,11 +40,11 @@ class UdpServer {
   int StartServer(int port);
 
  private:
-  int sockfd_;
+  std::unique_ptr<SlidingWindow> sliding_window_;
+  std::unique_ptr<PacketStatistics> packet_statistics_;
 
+  int sockfd_;
   std::fstream file_;
-  SlidingWindow *sliding_window_;
-  PacketStatistics *packet_statistics_;
   struct sockaddr_in cli_address_;
   int initial_seq_number_;
   int file_length_;
@@ -50,3 +62,4 @@ class UdpServer {
   void send_data_segment(DataSegment *data_segment);
   void wait_for_ack();
 };
+}  // namespace safe_udp

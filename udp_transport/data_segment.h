@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstdlib>
 
+namespace safe_udp {
 constexpr int MAX_PACKET_SIZE = 1472;
 constexpr int MAX_DATA_SIZE = 1460;
 constexpr int HEADER_LENGTH = 12;
@@ -32,3 +33,4 @@ class DataSegment {
   uint16_t convert_to_uint16(unsigned char *buffer, int start_index);
   char *final_packet_ = nullptr;
 };
+}  // namespace safe_udp

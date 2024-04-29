@@ -5,9 +5,13 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <memory>
 #include <string>
 #include <vector>
 #include "data_segment.h"
+
+namespace safe_udp {
+constexpr char CLIENT_FILE_PATH[] = "/work/files/client_files/";
 
 class UdpClient {
  public:
@@ -39,3 +43,4 @@ class UdpClient {
   struct sockaddr_in server_address_;
   std::vector<DataSegment> data_segments_;
 };
+}  // namespace safe_udp

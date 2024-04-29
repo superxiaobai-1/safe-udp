@@ -1,18 +1,13 @@
 #include "udp_client.h"
 #include <netdb.h>
-#include <netinet/in.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <bitset>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <glog/logging.h>
 #include "data_segment.h"
 
+namespace safe_udp {
 UdpClient::UdpClient() {
   last_in_order_packet_ = -1;
   last_packet_received_ = -1;
@@ -21,7 +16,7 @@ UdpClient::UdpClient() {
 void UdpClient::SendFileRequest(const std::string &file_name) {
   int n;
   int next_seq_expected;
-  int segmentsInBetween = 0;
+  int segments_in_between = 0;
   initial_seq_number_ = 127;
   if (receiver_window_ == 0) {
     receiver_window_ = 100;
@@ -39,7 +34,7 @@ void UdpClient::SendFileRequest(const std::string &file_name) {
   memset(buffer, 0, MAX_PACKET_SIZE);
 
   std::fstream file;
-  std::string file_path = "/work/files/client_files/" + file_name;
+  std::string file_path = std::string(CLIENT_FILE_PATH) + file_name;
   file.open(file_path.c_str(), std::ios::out);
 
   while ((n = recvfrom(sockfd_, buffer, MAX_PACKET_SIZE, 0, NULL, NULL)) > 0) {
@@ -50,7 +45,7 @@ void UdpClient::SendFileRequest(const std::string &file_name) {
       return;
     }
 
-    DataSegment *data_segment = new DataSegment();
+    std::unique_ptr<DataSegment> data_segment = std::make_unique<DataSegment>();
     data_segment->DeserializeToDataSegment(buffer, n);
 
     LOG(INFO) << "packet received with seq_number_:"
@@ -83,17 +78,17 @@ void UdpClient::SendFileRequest(const std::string &file_name) {
       send_ack(next_seq_expected);
     }
 
-    segmentsInBetween =
+    segments_in_between =
         (data_segment->seq_number_ - next_seq_expected) / MAX_DATA_SIZE;
-    int thisSegmentIndex = last_in_order_packet_ + segmentsInBetween + 1;
+    int this_segment_index = last_in_order_packet_ + segments_in_between + 1;
 
-    if (thisSegmentIndex - last_in_order_packet_ > receiver_window_) {
-      LOG(INFO) << "Packet dropped " << thisSegmentIndex;
+    if (this_segment_index - last_in_order_packet_ > receiver_window_) {
+      LOG(INFO) << "Packet dropped " << this_segment_index;
       // Drop the packet, if it exceeds receiver window
       continue;
     }
 
-    insert(thisSegmentIndex, *data_segment);
+    insert(this_segment_index, *data_segment);
 
     for (int i = last_in_order_packet_ + 1; i <= last_packet_received_; i++) {
       if (data_segments_[i].seq_number_ != -1) {
@@ -133,21 +128,21 @@ int UdpClient::add_to_data_segment_vector(const DataSegment &data_segment) {
 void UdpClient::send_ack(int ackNumber) {
   LOG(INFO) << "Sending an ack :" << ackNumber;
   int n = 0;
-  DataSegment *ackDatagram = new DataSegment();
-  ackDatagram->ack_flag_ = true;
-  ackDatagram->ack_number_ = ackNumber;
-  ackDatagram->fin_flag_ = false;
-  ackDatagram->length_ = 0;
-  ackDatagram->seq_number_ = 0;
+  DataSegment *ack_segment = new DataSegment();
+  ack_segment->ack_flag_ = true;
+  ack_segment->ack_number_ = ackNumber;
+  ack_segment->fin_flag_ = false;
+  ack_segment->length_ = 0;
+  ack_segment->seq_number_ = 0;
 
-  char *ackDatagramChars = ackDatagram->SerializeToCharArray();
-  n = sendto(sockfd_, ackDatagramChars, MAX_PACKET_SIZE, 0,
+  char *data = ack_segment->SerializeToCharArray();
+  n = sendto(sockfd_, data, MAX_PACKET_SIZE, 0,
              (struct sockaddr *)&(server_address_), sizeof(struct sockaddr_in));
   if (n < 0) {
-    LOG(INFO) << "Sending ack failed";
+    LOG(INFO) << "Sending ack failed !!!";
   }
 
-  free(ackDatagramChars);
+  free(data);
 }
 
 void UdpClient::CreateSocketAndServerConnection(
@@ -191,3 +186,4 @@ void UdpClient::insert(int index, const DataSegment &data_segment) {
     data_segments_[index] = data_segment;
   }
 }
+}  // namespace safe_udp
