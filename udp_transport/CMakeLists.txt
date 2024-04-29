@@ -6,7 +6,7 @@ set(file
   udp_client.cpp
   )
 
-add_library(udp_transport ${file})
+add_library(udp_transport SHARED ${file})
 target_link_libraries(udp_transport  glog)
 
 install(TARGETS  udp_transport DESTINATION  ${PROJECT_BINARY_DIR}/lib)
