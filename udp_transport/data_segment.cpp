@@ -54,20 +54,21 @@ void DataSegment::DeserializeToDataSegment(unsigned char *data_segment,
 
 uint32_t DataSegment::convert_to_uint32(unsigned char *buffer,
                                         int start_index) {
-  uint32_t integerValue =
+  uint32_t uint32_value =
       (buffer[start_index + 3] << 24) | (buffer[start_index + 2] << 16) |
       (buffer[start_index + 1] << 8) | (buffer[start_index]);
-  return integerValue;
+  return uint32_value;
 }
 
 uint16_t DataSegment::convert_to_uint16(unsigned char *buffer,
                                         int start_index) {
-  uint16_t shortValue = (buffer[start_index + 1] << 8) | (buffer[start_index]);
-  return shortValue;
+  uint16_t uint16_value =
+      (buffer[start_index + 1] << 8) | (buffer[start_index]);
+  return uint16_value;
 }
 
 bool DataSegment::convert_to_bool(unsigned char *buffer, int index) {
-  bool booleanValue = buffer[index];
-  return booleanValue;
+  bool bool_value = buffer[index];
+  return bool_value;
 }
 }  // namespace safe_udp

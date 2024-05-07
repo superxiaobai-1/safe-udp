@@ -281,15 +281,15 @@ void UdpServer::send_packet(int seq_number, int start_byte) {
     }
 
   } else {
-    SlidWinBuffer *slidingWindowBuffer = new SlidWinBuffer();
-    slidingWindowBuffer->first_byte_ = start_byte;
-    slidingWindowBuffer->data_length_ = dataLength;
-    slidingWindowBuffer->seq_num_ = initial_seq_number_ + start_byte;
+    SlidWinBuffer slidingWindowBuffer;
+    slidingWindowBuffer.first_byte_ = start_byte;
+    slidingWindowBuffer.data_length_ = dataLength;
+    slidingWindowBuffer.seq_num_ = initial_seq_number_ + start_byte;
     struct timeval time;
     gettimeofday(&time, NULL);
-    slidingWindowBuffer->time_sent_ = time;
+    slidingWindowBuffer.time_sent_ = time;
     sliding_window_->last_packet_sent_ =
-        sliding_window_->AddToBuffer(*slidingWindowBuffer);
+        sliding_window_->AddToBuffer(slidingWindowBuffer);
   }
   read_file_and_send(lastPacket, start_byte, start_byte + dataLength);
 }
@@ -305,22 +305,22 @@ void UdpServer::wait_for_ack() {
   while ((n = recvfrom(sockfd_, buffer, MAX_PACKET_SIZE, 0,
                        (struct sockaddr *)&client_address, &addr_size)) <= 0) {
   };
-  DataSegment *ack_segment = new DataSegment();
-  ack_segment->DeserializeToDataSegment(buffer, n);
+  DataSegment ack_segment;
+  ack_segment.DeserializeToDataSegment(buffer, n);
 
   // LOG(INFO) << "ACK Received: ack_number " << ack_segment->ack_number_;
   SlidWinBuffer last_packet_acked_buffer =
       sliding_window_
           ->sliding_window_buffers_[sliding_window_->last_acked_packet_];
-  if (ack_segment->ack_flag_) {
-    if (ack_segment->ack_number_ == sliding_window_->send_base_) {
-      LOG(INFO) << "DUP ACK Received: ack_number: " << ack_segment->ack_number_;
+  if (ack_segment.ack_flag_) {
+    if (ack_segment.ack_number_ == sliding_window_->send_base_) {
+      LOG(INFO) << "DUP ACK Received: ack_number: " << ack_segment.ack_number_;
       sliding_window_->dup_ack_++;
       // 快速重传
       if (sliding_window_->dup_ack_ == 3) {
         packet_statistics_->retransmit_count_++;
-        LOG(INFO) << "Fast Retransmit seq_number: " << ack_segment->ack_number_;
-        retransmit_segment(ack_segment->ack_number_ - initial_seq_number_);
+        LOG(INFO) << "Fast Retransmit seq_number: " << ack_segment.ack_number_;
+        retransmit_segment(ack_segment.ack_number_ - initial_seq_number_);
         sliding_window_->dup_ack_ = 0;
         if (cwnd_ > 1) {
           cwnd_ = cwnd_ / 2;
@@ -331,7 +331,7 @@ void UdpServer::wait_for_ack() {
         //           << ack_segment->ack_number_;
       }
 
-    } else if (ack_segment->ack_number_ > sliding_window_->send_base_) {
+    } else if (ack_segment.ack_number_ > sliding_window_->send_base_) {
       if (is_fast_recovery_) {
         // LOG(INFO) << "Change to Cong Avoidance from fast recovery recv ack:"
         //           << ack_segment->ack_number_;
@@ -342,7 +342,7 @@ void UdpServer::wait_for_ack() {
       }
 
       sliding_window_->dup_ack_ = 0;
-      sliding_window_->send_base_ = ack_segment->ack_number_;
+      sliding_window_->send_base_ = ack_segment.ack_number_;
       if (sliding_window_->last_acked_packet_ == -1) {
         sliding_window_->last_acked_packet_ = 0;
         last_packet_acked_buffer =
@@ -352,7 +352,7 @@ void UdpServer::wait_for_ack() {
       ack_number = last_packet_acked_buffer.seq_num_ +
                    last_packet_acked_buffer.data_length_;
 
-      while (ack_number < ack_segment->ack_number_) {
+      while (ack_number < ack_segment.ack_number_) {
         sliding_window_->last_acked_packet_++;
         last_packet_acked_buffer =
             sliding_window_
@@ -385,7 +385,7 @@ void UdpServer::calculate_rtt_and_time(struct timeval start_time,
   smoothed_rtt_ = smoothed_rtt_ + 0.125 * (sample_rtt - smoothed_rtt_);
 
   dev_rtt_ = 0.75 * dev_rtt_ + 0.25 * (abs(smoothed_rtt_ - sample_rtt));
-  smoothed_timeout_ = (smoothed_rtt_ + 4 * dev_rtt_);
+  smoothed_timeout_ = smoothed_rtt_ + 4 * dev_rtt_;
 
   if (smoothed_timeout_ > 1000000) {
     smoothed_timeout_ = rand() % 30000;
@@ -447,7 +447,7 @@ char *UdpServer::GetRequest(int client_sockfd) {
   while (recvfrom(client_sockfd, buffer, MAX_PACKET_SIZE, 0,
                   (struct sockaddr *)&client_address, &addr_size) <= 0)
     ;
-  LOG(INFO) << "**Request received is::" << buffer;
+  LOG(INFO) << "***Request received is: " << buffer;
   cli_address_ = client_address;
   return buffer;
 }
