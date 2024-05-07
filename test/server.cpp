@@ -18,6 +18,7 @@ int main(int argc, char *argv[]) {
   char *message_recv;
   if (argc < 3) {
     LOG(INFO) << "Please provide a port number and receive window";
+    LOG(ERROR) << "Please provide format: <server-port> <receiver-window>";
     exit(1);
   }
   if (argv[1] != NULL) {
