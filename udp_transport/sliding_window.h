@@ -15,7 +15,7 @@ class SlidingWindow {
   std::vector<SlidWinBuffer> sliding_window_buffers_;
   int last_packet_sent_;
   int last_acked_packet_;
-  // 第一个未确认的数据包的指针
+  // 成功发送且已经确认的数据包中最小的序列号
   int send_base_;
   int dup_ack_;
 };
