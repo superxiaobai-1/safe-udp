@@ -76,6 +76,7 @@ void UdpClient::SendFileRequest(const std::string &file_name) {
     // Old packet
     if (next_seq_expected > data_segment->seq_number_) {
       send_ack(next_seq_expected);
+      continue;
     }
 
     segments_in_between =
