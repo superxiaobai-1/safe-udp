@@ -17,7 +17,7 @@ void UdpClient::SendFileRequest(const std::string &file_name) {
   int n;
   int next_seq_expected;
   int segments_in_between = 0;
-  initial_seq_number_ = 127;
+  initial_seq_number_ = 67;
   if (receiver_window_ == 0) {
     receiver_window_ = 100;
   }
