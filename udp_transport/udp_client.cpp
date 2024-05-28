@@ -1,10 +1,14 @@
 #include "udp_client.h"
+
 #include <netdb.h>
 #include <stdlib.h>
+
 #include <fstream>
 #include <iostream>
 #include <sstream>
+
 #include <glog/logging.h>
+
 #include "data_segment.h"
 
 namespace safe_udp {
@@ -171,7 +175,7 @@ void UdpClient::CreateSocketAndServerConnection(
 void UdpClient::insert(int index, const DataSegment &data_segment) {
   if (index > last_packet_received_) {
     for (int i = last_packet_received_ + 1; i <= index; i++) {
-      if (data_segments_.size() == index) {
+      if (i == index) {
         data_segments_.push_back(data_segment);
       } else {
         DataSegment data_segment;
