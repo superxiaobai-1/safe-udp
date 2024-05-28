@@ -25,7 +25,7 @@ UdpServer::UdpServer() {
   initial_seq_number_ = 67;
   start_byte_ = 0;
 
-  ssthresh_ = 68;
+  ssthresh_ = 128;
   cwnd_ = 1;
 
   is_slow_start_ = true;
@@ -444,9 +444,9 @@ char *UdpServer::GetRequest(int client_sockfd) {
   socklen_t addr_size;
   memset(buffer, 0, MAX_PACKET_SIZE);
   addr_size = sizeof(client_address);
-  while (recvfrom(client_sockfd, buffer, MAX_PACKET_SIZE, 0,
-                  (struct sockaddr *)&client_address, &addr_size) <= 0)
-    ;
+  recvfrom(client_sockfd, buffer, MAX_PACKET_SIZE, 0,
+           (struct sockaddr *)&client_address, &addr_size);
+
   LOG(INFO) << "***Request received is: " << buffer;
   cli_address_ = client_address;
   return buffer;

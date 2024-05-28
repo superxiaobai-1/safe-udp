@@ -62,7 +62,7 @@ void UdpClient::SendFileRequest(const std::string &file_name) {
     if (is_delay_ && rand() % 100 < prob_value_) {
       int sleep_time = (rand() % 10) * 1000;
       LOG(INFO) << "Delaying this packet with seq " << data_segment->seq_number_
-                << " for " << sleep_time;
+                << " for " << sleep_time << "us";
       usleep(sleep_time);
     }
 
@@ -94,10 +94,8 @@ void UdpClient::SendFileRequest(const std::string &file_name) {
     for (int i = last_in_order_packet_ + 1; i <= last_packet_received_; i++) {
       if (data_segments_[i].seq_number_ != -1) {
         if (file.is_open()) {
-          if (last_in_order_packet_ != -1) {
-            file << data_segments_[last_in_order_packet_].data_;
-          }
-          last_in_order_packet_++;
+          file << data_segments_[i].data_;
+          last_in_order_packet_ = i;
         }
       } else {
         break;
@@ -109,9 +107,7 @@ void UdpClient::SendFileRequest(const std::string &file_name) {
     if (data_segment->fin_flag_) {
       LOG(INFO) << "Fin flag received !!!";
       if (file.is_open()) {
-        if (last_in_order_packet_ != -1) {
-          file << data_segments_[last_in_order_packet_].data_;
-        }
+        file << data_segments_[last_in_order_packet_ + 1].data_;
       }
       break;
     }
