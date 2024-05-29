@@ -16,6 +16,7 @@ constexpr char CLIENT_FILE_PATH[] = "/work/files/client_files/";
 class UdpClient {
  public:
   UdpClient();
+  ~UdpClient() { close(sockfd_); }
 
   void SendFileRequest(const std::string& file_name);
 
@@ -30,6 +31,7 @@ class UdpClient {
   int last_in_order_packet_;
   int last_packet_received_;
   int receiver_window_;
+  bool fin_flag_received_;
 
  private:
   void send_ack(int ackNumber);

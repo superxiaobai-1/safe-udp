@@ -1,6 +1,7 @@
 #pragma once
 
 #include <netinet/in.h>
+#include <unistd.h>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -23,6 +24,9 @@ class UdpServer {
     // if (packet_statistics_) {
     //   free(packet_statistics_);
     // }
+
+    close(sockfd_);
+    file_.close();
   }
 
   char *GetRequest(int client_sockfd);

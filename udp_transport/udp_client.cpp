@@ -15,6 +15,7 @@ namespace safe_udp {
 UdpClient::UdpClient() {
   last_in_order_packet_ = -1;
   last_packet_received_ = -1;
+  fin_flag_received_ = false;
 }
 
 void UdpClient::SendFileRequest(const std::string &file_name) {
@@ -78,7 +79,8 @@ void UdpClient::SendFileRequest(const std::string &file_name) {
     }
 
     // Old packet
-    if (next_seq_expected > data_segment->seq_number_) {
+    if (next_seq_expected > data_segment->seq_number_ &&
+        !data_segment->fin_flag_) {
       send_ack(next_seq_expected);
       continue;
     }
@@ -91,6 +93,11 @@ void UdpClient::SendFileRequest(const std::string &file_name) {
       LOG(INFO) << "Packet dropped " << this_segment_index;
       // Drop the packet, if it exceeds receiver window
       continue;
+    }
+
+    if (data_segment->fin_flag_) {
+      LOG(INFO) << "Fin flag received !!!";
+      fin_flag_received_ = true;
     }
 
     insert(this_segment_index, *data_segment);
@@ -108,15 +115,14 @@ void UdpClient::SendFileRequest(const std::string &file_name) {
     send_ack(data_segments_[last_in_order_packet_].seq_number_ +
              data_segments_[last_in_order_packet_].length_);
 
-    if (data_segment->fin_flag_) {
-      LOG(INFO) << "Fin flag received !!!";
-      if (file.is_open()) {
-        file << data_segments_[last_in_order_packet_ + 1].data_;
-      }
+    memset(buffer, 0, MAX_PACKET_SIZE);
+
+    // 如果已经接收到 fin_flag_ 且所有数据包都处理完毕，则跳出循环
+    if (fin_flag_received_ && last_in_order_packet_ == last_packet_received_) {
       break;
     }
-    memset(buffer, 0, MAX_PACKET_SIZE);
   }
+
   free(buffer);
   file.close();
 }
