@@ -112,15 +112,16 @@ void UdpClient::SendFileRequest(const std::string &file_name) {
         break;
       }
     }
-    send_ack(data_segments_[last_in_order_packet_].seq_number_ +
-             data_segments_[last_in_order_packet_].length_);
 
-    memset(buffer, 0, MAX_PACKET_SIZE);
 
     // 如果已经接收到 fin_flag_ 且所有数据包都处理完毕，则跳出循环
     if (fin_flag_received_ && last_in_order_packet_ == last_packet_received_) {
       break;
     }
+    send_ack(data_segments_[last_in_order_packet_].seq_number_ +
+             data_segments_[last_in_order_packet_].length_);
+
+    memset(buffer, 0, MAX_PACKET_SIZE);
   }
 
   free(buffer);
